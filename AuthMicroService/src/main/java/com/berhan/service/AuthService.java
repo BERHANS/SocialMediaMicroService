@@ -3,6 +3,7 @@ package com.berhan.service;
 import com.berhan.dto.request.ActivationRequestDto;
 import com.berhan.dto.request.LoginRequestDto;
 import com.berhan.dto.request.RegisterRequestDto;
+import com.berhan.dto.request.UpdateEmailOrUserNameRequestDto;
 import com.berhan.dto.response.RegisterResponseDto;
 import com.berhan.exception.AuthManagerException;
 import com.berhan.exception.ErrorType;
@@ -65,6 +66,29 @@ public class AuthService extends ServiceManager<Auth,Long> {
         }else {
             throw new AuthManagerException(ErrorType.ACTIVATION_CODE_ERROR);
         }
+    }
+
+    public Boolean updateEmailOrUserName(UpdateEmailOrUserNameRequestDto dto){
+        Optional<Auth> auth = authRepository.findById(dto.getId());
+        if(auth.isEmpty()){
+            throw new AuthManagerException(ErrorType.USER_NOT_FOUND);
+        }
+
+        auth.get().setEmail(dto.getEmail());
+        auth.get().setUsername(dto.getUsername());
+        update(auth.get());
+        return true;
+    }
+
+    public Boolean deleteStatusUser(String token){
+        Optional<Auth> auth = authRepository.findById(tokenManager.getIdFromToken(token).get());
+        if(auth.isEmpty()){
+            throw new AuthManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        userManager.userProfileDeleted(token);
+        auth.get().setStatus(EStatus.DELETED);
+        update(auth.get());
+        return true;
     }
 
 

@@ -27,6 +27,12 @@ public class UserProfileController {
 
     @PostMapping(UPDATE)
     public ResponseEntity<Boolean> updateUserProfile(@RequestBody UserUpdateRequestDto dto){
-        return ResponseEntity.ok(service.updateUserProfile(dto));
+        return ResponseEntity.ok(service.update(dto));
     }
+
+    @PostMapping(DELETEBYID)
+    public ResponseEntity<Boolean> userProfileDeleted(@RequestBody String token){
+        return ResponseEntity.ok(service.userProfileDeleted(token));
+    }
+
 }

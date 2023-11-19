@@ -1,9 +1,11 @@
 package com.berhan.Service;
 
+import com.berhan.dto.request.UpdateEmailOrUserNameRequestDto;
 import com.berhan.dto.request.UserCreateRequestDto;
 import com.berhan.dto.request.UserUpdateRequestDto;
 import com.berhan.exception.ErrorType;
 import com.berhan.exception.UserManagerException;
+import com.berhan.manager.AuthManager;
 import com.berhan.mapper.UserMapper;
 import com.berhan.repository.UserRepository;
 import com.berhan.repository.entity.UserProfile;
@@ -19,12 +21,14 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
 
     private final UserRepository repository;
     private final JwtTokenManager jwtTokenManager;
+    private final AuthManager authManager;
 
 
-    public UserProfileService(UserRepository repository, JwtTokenManager jwtTokenManager) {
+    public UserProfileService(UserRepository repository, JwtTokenManager jwtTokenManager, AuthManager authManager) {
         super(repository);
         this.repository = repository;
         this.jwtTokenManager = jwtTokenManager;
+        this.authManager = authManager;
     }
 
     public Boolean createUser(UserCreateRequestDto dto) {
@@ -48,22 +52,47 @@ public class UserProfileService extends ServiceManager<UserProfile,Long> {
         }
     }
 
-    public Boolean updateUserProfile(UserUpdateRequestDto dto) {
+    public Boolean update(UserUpdateRequestDto dto){
         Optional<Long> authId = jwtTokenManager.getIdFromToken(dto.getToken());
-        if (authId.isEmpty()) {
-            throw new UserManagerException(ErrorType.TOKEN_NOT_FOUND);
+        if(authId.isEmpty()){
+            throw new UserManagerException(ErrorType.INVALID_TOKEN);
         }
         Optional<UserProfile> userProfile = repository.findOptionalByAuthId(authId.get());
-        if (userProfile.isEmpty()){
+        if(userProfile.isEmpty()){
             throw new UserManagerException(ErrorType.USER_NOT_FOUND);
         }
-        update(userProfile.get().builder()
-                .email(dto.getEmail())
-                .phone(dto.getPhone())
-                .about(dto.getAbout())
-                .address(dto.getAddress())
-                .avatarUrl(dto.getAvatarUrl())
-                .build());
+        //auth istegi yolla
+        if(!dto.getUsername().equals(userProfile.get().getUsername()) || !dto.getEmail().equals(userProfile.get().getEmail())){
+            userProfile.get().setUsername(dto.getUsername());
+            userProfile.get().setEmail(dto.getEmail());
+            UpdateEmailOrUserNameRequestDto updateEmailOrUsernameRequestDto = UpdateEmailOrUserNameRequestDto.builder()
+                    .username(userProfile.get().getUsername())
+                    .email(userProfile.get().getEmail())
+                    .id(userProfile.get().getAuthId())
+                    .build();
+            authManager.updateEmailOrUserName(updateEmailOrUsernameRequestDto);
+        }
+        userProfile.get().setPhone(dto.getPhone());
+        userProfile.get().setAvatarUrl(dto.getAvatarUrl());
+        userProfile.get().setAddress(dto.getAddress());
+        userProfile.get().setAbout(dto.getAbout());
+        update(userProfile.get());
+
         return true;
     }
+
+    public Boolean userProfileDeleted(String token){
+        Optional<Long> authId = jwtTokenManager.getIdFromToken(token);
+        if (authId.isEmpty()){
+            throw new UserManagerException(ErrorType.INVALID_TOKEN);
+        }
+        Optional<UserProfile> userProfile = repository.findByAuthId(authId.get());
+        if(userProfile.isEmpty()){
+            throw new UserManagerException(ErrorType.USER_NOT_FOUND);
+        }
+        userProfile.get().setStatus(EStatus.DELETED);
+        update(userProfile.get());
+        return true;
+    }
+
 }

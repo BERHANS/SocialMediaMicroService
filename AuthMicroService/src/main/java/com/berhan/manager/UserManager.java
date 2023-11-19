@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import static com.berhan.constants.RestApi.ACTIVATESTATUS;
+import static com.berhan.constants.RestApi.DELETEBYID;
 
 
 @FeignClient(url = "http://localhost:7071/api/v1/user",dismiss404 = true, name = "auth-user")//dissmis 404 hatalarını görmezden gelir
@@ -18,6 +19,9 @@ public interface UserManager {
 
     @GetMapping(ACTIVATESTATUS+"/{authId}")
     public ResponseEntity<Boolean> activationUser(@PathVariable Long authId);
+
+    @PostMapping(DELETEBYID)
+    public ResponseEntity<Boolean> userProfileDeleted(@RequestBody String token);
 
 
 }

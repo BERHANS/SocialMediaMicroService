@@ -3,6 +3,7 @@ package com.berhan.controller;
 import com.berhan.dto.request.ActivationRequestDto;
 import com.berhan.dto.request.LoginRequestDto;
 import com.berhan.dto.request.RegisterRequestDto;
+import com.berhan.dto.request.UpdateEmailOrUserNameRequestDto;
 import com.berhan.dto.response.RegisterResponseDto;
 import com.berhan.repository.entity.Auth;
 import com.berhan.service.AuthService;
@@ -68,5 +69,14 @@ public class AuthController {
         return ResponseEntity.ok(tokenManager.getRoleFromToken(token).get());
     }
 
+    @PutMapping("/update_email_or_username")
+    public ResponseEntity<Boolean> updateEmailOrUserName (@RequestBody UpdateEmailOrUserNameRequestDto dto){
+        return ResponseEntity.ok(service.updateEmailOrUserName(dto));
+    }
+
+    @PostMapping(DELETEBYID)
+    public ResponseEntity<Boolean> deleteStatusUser(String token){
+        return ResponseEntity.ok(service.deleteStatusUser(token));
+    }
 
 }

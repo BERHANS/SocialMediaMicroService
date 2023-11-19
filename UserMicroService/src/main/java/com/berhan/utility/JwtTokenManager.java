@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.berhan.exception.ErrorType;
+import com.berhan.exception.UserManagerException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -84,13 +86,13 @@ public class JwtTokenManager {
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(issuer).withAudience(audience).build();
             DecodedJWT decodedJWT = verifier.verify(token);
             if (decodedJWT == null){
-                throw new RuntimeException();
+                throw new UserManagerException(ErrorType.INVALID_TOKEN);
             }
             Long id = decodedJWT.getClaim("id").asLong();// jason türünde döner id isimli parametrenin değerini aldık.
             return Optional.of(id);
         }catch (Exception e){
             e.getMessage();
-            throw new RuntimeException();
+            throw new UserManagerException(ErrorType.INVALID_TOKEN);
         }
 
     }
